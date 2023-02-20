@@ -18,6 +18,6 @@
 
 
 ## Лицензия
-Copyright (c) разработан по методике Свердлова З.С. 
-2022-2023 Evgeny Goryachev
+Copyright (c) разработан по методике Свердлова З.С.   
+2022-2023 Evgeny Goryachev  
 Gor.Com 
