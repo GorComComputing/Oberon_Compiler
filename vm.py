@@ -31,6 +31,34 @@ LN   = -23
 MEM_SIZE = 8*1024   # 8 килослов
 M = [STOP]*MEM_SIZE # Память по умолчанию заполнена командами STOP
 
+# Мнемоника
+_mnemo = [
+    "",
+    "STOP",
+    "ADD",
+    "SUB",
+    "MULT",
+    "DIV",
+    "MOD",
+    "NEG",
+    "LOAD",
+    "SAVE",
+    "DUP",
+    "DROP",
+    "SWAP",
+    "OVER",
+    "GOTO",
+    "IFLT",
+    "IFLE",
+    "IFGT",
+    "IFGE",
+    "IFEQ",
+    "IFNE",
+    "IN",
+    "OUT",
+    "LN"
+]
+
 
 # Процессор виртуальной машины
 def Run():
@@ -126,6 +154,13 @@ def Run():
     # Если в стеке что-то сталось, то выводит
     if SP < MEM_SIZE:
         print("Код возврата", M[SP])
+
+
+# Печатает сгенерированный код
+def printCode(PC):
+    for pc in range(0, PC):
+        print(pc, ') ', M[pc] if M[pc] >= 0 else _mnemo[-M[pc]])
+
 
 
 

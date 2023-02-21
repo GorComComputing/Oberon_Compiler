@@ -9,6 +9,7 @@ import items
 import enum
 from gen import *
 import vm as cm
+import gen
 
 
 # Типы данных
@@ -188,26 +189,41 @@ def Factor():
 def Term():
     T = Factor()    # множитель
     while scan.lex in {Lex.MULT, Lex.DIV, Lex.MOD}:
+        Op = scan.lex
         TestInt(T)
         scan.nextLex()
         T = Factor()    # множитель
         TestInt(T)
+        if Op == Lex.DIV:
+            Gen(cm.DIV)
+        elif Op == Lex.MULT:
+            Gen(cm.MULT)
+        else:
+            Gen(cm.MOD)
     return T
 
 
 #ПростоеВыраж = ["+"|"-"] Слагаемое {ОперСлож Слагаемое}.
 def SimpleExpr():
     if scan.lex in {Lex.PLUS, Lex.MINUS}:
+        op = scan.lex
         scan.nextLex()
         T = Term()  # слагаемое
         TestInt(T)
+        if op == Lex.MINUS:
+            Gen(cm.NEG)
     else:
         T = Term()
     while scan.lex in {Lex.PLUS, Lex.MINUS}:
+        op = scan.lex
         TestInt(T)
         scan.nextLex()
         T = Term()  # слагаемое
         TestInt(T)
+        if op == Lex.PLUS:
+            Gen(cm.ADD)
+        else:
+            Gen(cm.SUB)
     return T
 
 
@@ -221,10 +237,12 @@ def TestInt(T):
 def Expression():
     T = SimpleExpr()
     if scan.lex in {Lex.EQ, Lex.NE, Lex.LT, Lex.LE, Lex.GT, Lex.GE}:
+        op = scan.lex
         TestInt(T)
         scan.nextLex()
         T = SimpleExpr()
         TestInt(T)
+        GenComp(op)
         return Types.Bool
     else:
         return T
@@ -238,11 +256,13 @@ def Parameter():
 #   Переменная ":=" Выраж
 def AssStatement(x):
     # x - переменная
+    GenAddr(x)
     skip(Lex.NAME)
     skip(Lex.ASS)
     T = Expression()
     if x.typ != T:
         error.ctxError("Несоответсвие типов при присваивании")
+    Gen(cm.SAVE)
 
 
 def IntExpr():
@@ -257,21 +277,39 @@ def Variable():
     v = table.find(scan.name)
     if type(v) != items.Var:
         error.expect("имя переменной")
+    GenAddr(v)
     scan.nextLex()
 
 
 def Procedure(x):
     if x.name == "HALT":
         value = ConstExpr()
+        GenConst(value)
+        Gen(cm.STOP)
     elif x.name == "INC":
         # INC(v); INC(v, n)
         Variable()
+        Gen(cm.DUP)
+        Gen(cm.LOAD)
         if scan.lex == Lex.COMMA:
             scan.nextLex()
             IntExpr()
+        else:
+            Gen(1)
+        Gen(cm.ADD)
+        Gen(cm.SAVE)
     elif x.name == "DEC":
         # DEC(v); DEC(v, n)
         Variable()
+        Gen(cm.DUP)
+        Gen(cm.LOAD)
+        if scan.lex == Lex.COMMA:
+            scan.nextLex()
+            IntExpr()
+        else:
+            Gen(1)
+        Gen(cm.SUB)
+        Gen(cm.SAVE)
         if scan.lex == Lex.COMMA:
             scan.nextLex()
             IntExpr()
@@ -292,15 +330,30 @@ def Procedure(x):
 
 def Function(x):
     if x.name == "ABS":
-        IntExpr()
+        IntExpr()       # x
+        Gen(cm.DUP)     # x,x
+        Gen(0)          # x,x,0
+        Gen(gen.PC+3)   # x,x,0,A
+        Gen(cm.IFGE)
+        Gen(cm.NEG)
     elif x.name == "MIN":
         # MIN(INTEGER)
         Type()
+        Gen(scan.MAXINT)
+        Gen(cm.NEG)
+        Gen(1)
+        Gen(cm.SUB)
     elif x.name == "MAX":
         # MAX(INTEGER)
         Type()
+        Gen(scan.MAXINT)
     elif x.name == "ODD":
         IntExpr()
+        Gen(2)      # x,2
+        Gen(cm.MOD) # x MOD 2
+        Gen(0)      # x MOD 2,0
+        Gen(0)      # x MOD 2,0, 0_фиктивный адрес перехода
+        Gen(cm.IFEQ)
     else:
         assert False
 
