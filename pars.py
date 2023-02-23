@@ -317,13 +317,16 @@ def Procedure(x):
         pass
     elif x.name == "In.Int":
         Variable()
+        Gen(cm.IN)
+        Gen(cm.SAVE)
     elif x.name == "Out.Int":
         # Out.Int(e, f)
         IntExpr()
         skip(Lex.COMMA)
         IntExpr()
+        Gen(cm.OUT)
     elif x.name == "Out.Ln":
-        pass
+        Gen(cm.LN)
     else:
         assert False
 
@@ -380,10 +383,10 @@ def CallStatement(x):
         scan.nextLex()
         Procedure(x)
         skip(Lex.RPAR)
+    elif x.name == "Out.Ln":
+        Gen(cm.LN)
     elif x.name not in {"Out.Ln", "In.Open"}:
         error.expect("Out.Ln или In.Open")
-
-
 
         #else:
         #    scan.nextLex()  # закрывающая скобка
@@ -430,17 +433,32 @@ def AssOrCall():
 def IfStatement():
     skip(Lex.IF)
     BoolExpr()
+    CondPC = gen.PC
+    LastGOTO = 0
     skip(Lex.THEN)
     StatSeq()
     while scan.lex == Lex.ELSIF:
+        Gen(LastGOTO)
+        Gen(cm.GOTO)
+        LastGOTO = gen.PC
+        fixup(CondPC, gen.PC)
         scan.nextLex()
         BoolExpr()
+        CondPC = gen.PC
         skip(Lex.THEN)
         StatSeq()
     if scan.lex == Lex.ELSE:
+        Gen(LastGOTO)
+        Gen(cm.GOTO)
+        LastGOTO = gen.PC
+        fixup(CondPC, gen.PC)
         scan.nextLex()
         StatSeq()
+    else:
+        fixup(CondPC, gen.PC)
     skip(Lex.END)
+    fixup(LastGOTO, gen.PC)
+
 
 
 # проверить, что выражение логического типа
@@ -458,11 +476,17 @@ def BoolExpr():
 #      ПослОператоров
 #    END
 def WhileStatement():
+    WhilePC = gen.PC
     skip(Lex.WHILE)
     BoolExpr()
+    CondPC = gen.PC
     skip(Lex.DO)
     StatSeq()
     skip(Lex.END)
+    Gen(WhilePC)
+    Gen(cm.GOTO)
+    # vm.M[CondPC - 2] = gen.PC
+    fixup(CondPC, gen.PC)   # адресная привязка
 
 
 #[
@@ -496,6 +520,18 @@ def StatSeq():
         Statement()
 
 
+def AllocVars():
+    vars = table.getVars()
+    for v in vars:
+        if v.addr > 0:
+            fixup(v.addr, gen.PC)
+            Gen(0)
+        else:
+            error.Warning("Переменная " + v.name + " объявлена, но не используется")
+
+
+
+
 #   MODULE Имя ";"
 #   [Импорт]
 #   ПослОбъявл
@@ -526,6 +562,8 @@ def Module():
         error.expect("имя модуля" + scan.name)
     scan.nextLex()
     skip(Lex.DOT)
+    Gen(cm.STOP)
+    AllocVars()
 
 
 # основная функция компилятора

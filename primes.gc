@@ -11,32 +11,17 @@ CONST
 
 VAR
     i, n, d: INTEGER;
-    x, c: INTEGER;
+    y,x, c: INTEGER;
 
 
 BEGIN
 
-    HALT(-1);
-
-(*    Out.Int(MIN(INTEGER), 0);
-    Out.Int(MAX(INTEGER), 0); *)
-
-
-
-    n := 1000;
-
-(*
     In.Open;
     In.Int(n);
 
-    Out.Int(ABS(123),0);
-    Out.Int(ABS(-123),0);
-    Out.Int(ABS(0),0);
-
-
     c := 0; (* Счетчик простых *)
     i := 2;
- *)   WHILE i <= n DO
+    WHILE i <= n DO
         (* Делим на 2, 3, ... пока не разделится *)
         d := 2;
         WHILE i MOD d # 0 DO

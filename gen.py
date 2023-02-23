@@ -4,7 +4,7 @@ import vm as cm
 from scan import Lex
 
 PC = 0      #Счетчик команд времени компиляции
-Addr = 100  #Фиктивный адрес начала переменных
+
 
 def Gen(cmd):
     global PC
@@ -18,11 +18,10 @@ def GenConst(c):
         Gen(cm.NEG)
 
 
+# генерируем адрес переменной
 def GenAddr(v):
-    global Addr
-    Gen(Addr)    # Заглушка
-    Addr += 1
-
+    Gen(v.addr)
+    v.addr = PC + 1
 
 
 # генерация кода для сравнения
@@ -41,4 +40,11 @@ def GenComp(op):
     elif op == Lex.LT:
         Gen(cm.IFGE)
 
+
+# Фиксируем наверху (записываем в ячейку памяти наверху)
+def fixup(A, PC):
+    while A > 0:
+        temp = vm.M[A - 2]
+        vm.M[A - 2] = PC
+        A = temp
 

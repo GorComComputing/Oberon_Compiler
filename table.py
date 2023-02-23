@@ -1,5 +1,6 @@
 # Таблица имен
 import error    #подключаем сообщения об ошибках
+import items
 
 _table = []             # таблица по принципу стека
 
@@ -34,3 +35,13 @@ def find(name):
         if name in block:
             return block[name]
     error.ctxError("Необъявленное имя")
+
+
+# извлечь переменные из таблицы имен
+def getVars():
+    vars = []
+    lastBlock = _table[-1]
+    for item in lastBlock.values():
+        if type(item) == items.Var:
+            vars.append(item)
+    return vars

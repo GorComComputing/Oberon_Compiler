@@ -33,6 +33,7 @@ def Error(msg):
     exit(2)  #Завершает работу программы с кодом возврата 2
 
 
+# предупреждение
 def Warning(msg):
     print()
     print(msg)
