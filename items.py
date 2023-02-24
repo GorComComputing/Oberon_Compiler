@@ -19,7 +19,7 @@ class Var:
         assert type(name) == str    # дополнительная проверка на строку
         self.name = name
         self.typ = typ
-        self.addr = 0 #addr
+        self.addr = 0 #addr - место последнего использования переменной
 
 
 class Type:

@@ -1,9 +1,9 @@
 #Синтаксический анализатор
+
 import text
 import scan
 import table
 from scan import Lex
-#from scan import *
 import error    #подключаем сообщения об ошибках
 import items
 import enum
@@ -528,8 +528,6 @@ def AllocVars():
             Gen(0)
         else:
             error.Warning("Переменная " + v.name + " объявлена, но не используется")
-
-
 
 
 #   MODULE Имя ";"

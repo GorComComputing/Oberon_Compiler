@@ -1,4 +1,5 @@
 #Лексический анализатор
+
 from enum import Enum #подключаем класс Enum
 import string
 
